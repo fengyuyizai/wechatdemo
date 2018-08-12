@@ -1,0 +1,75 @@
+/**index.wxss**/
+
+
+.body{
+  margin-top: 50rpx;
+}
+.body .body-header{
+  height: 140rpx;
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+}
+.body .body-header .body-Hitem{
+  /* border: 1px solid #ddd; */
+  display: flex;
+  flex-grow: 1;
+  height: 140rpx;
+  flex-direction:column;
+  justify-content: center;
+  align-items: center;
+}
+.body .body-header .body-Hitem .body-Hitem-img{
+  width: 70rpx;
+  height: 70rpx;
+  /* display: flex; */
+}
+.body .body-header .body-Hitem text{
+  font-size: 12px;
+  line-height: 50rpx;
+}
+
+.body .body-session{
+  background-color: #ececec
+}
+.body .body-session .body-session-title{
+  display: block;
+  padding-top: 20rpx;
+  font-size: 16px;
+  
+}
+.body .body-session .body-session-item{
+  width: 100%;
+  /* border: 1px solid #e4e4e4; */
+  border-bottom: 1px solid #acacac;
+  border-top: 1px solid #d5d5d5;
+  margin-top: 20rpx;
+  background-color: #fff;
+}
+.body .body-session .body-session-item .title{
+  display: block;
+  width: 100%;
+  height: 70rpx;
+  line-height: 70rpx;
+  padding-left: 20rpx;
+  color: #9e9e9e;
+}
+.body .body-session .body-session-item .article{
+  
+  
+}
+.body .body-session .body-session-item .article image{
+  width: 100%;
+  height: 250rpx;
+}
+.body .body-session .body-session-item .article .message{
+  line-height: 50rpx;
+  font-size: 14px;
+  padding: 20rpx;
+  display: block;
+  max-height: 80rpx;
+  overflow: hidden;
+  text-overflow:ellipsis;
+  word-break:break-all;
+}

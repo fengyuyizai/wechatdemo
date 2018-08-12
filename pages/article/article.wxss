@@ -1,0 +1,16 @@
+.continer{
+  display: flex;
+  justify-content: center;
+  flex-direction:column;
+}
+
+.title{
+  font-size: 25px;
+  line-height: 100rpx;
+  font-weight: bold;
+  text-align: center;
+}
+.message{
+  padding: 0 20rpx;
+  word-break:break-all;
+}
