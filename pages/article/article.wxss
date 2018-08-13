@@ -4,6 +4,15 @@
   flex-direction:column;
 }
 
+.continer .image{
+  display: flex;
+  justify-content: center;
+}
+.continer .image image{
+  width: 100%;
+  max-height: 400rpx;
+}
+
 .title{
   font-size: 25px;
   line-height: 100rpx;
@@ -13,4 +22,5 @@
 .message{
   padding: 0 20rpx;
   word-break:break-all;
+  color: #3f3f3f;
 }
