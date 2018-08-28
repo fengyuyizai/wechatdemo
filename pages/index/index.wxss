@@ -1,6 +1,7 @@
 /* 地图样式 */
 .mapCanvas{
   position: absolute;
+  top: 83rpx;
   z-index: 1;
 }
 
@@ -69,7 +70,7 @@
   margin-left: 21rpx;
   z-index: 3;
 }
-.mapControls .guide text{
+.mapControls .guide cover-view{
   font-size: 20rpx;
   background-color: #fff;
   border-radius: 5rpx;
@@ -106,7 +107,7 @@
   box-shadow:0px 3px 3px 0px rgba(90,140,231,0.42);
   margin: 20rpx 0;
 }
-.mapControls .rightControls .shijing view{
+.mapControls .rightControls .shijing cover-view{
   width: 46rpx;
   height: 46rpx;
   border-radius: 50%;
@@ -142,7 +143,6 @@
 .mapControls .leftControls .chooseFloor{
   width: 68rpx;
   height:283rpx;
-  
   box-sizing: border-box;
   background-color: #fff;
   border-radius: 34rpx;
@@ -164,6 +164,9 @@ color: transparent;
   line-height: 46rpx;
   text-align: center;
   margin: 7rpx 0;
+}
+.mapControls .leftControls .chooseFloor .floorItem cover-view{
+  display: inline;
 }
 .mapControls .leftControls .chooseFloor .floorItem.curfloor{
   background-color: #5A8CE7;

@@ -14,7 +14,10 @@ Page({
     chooseFloorShow: false,
     curFloor: '1F',
     buildInfo: stateData.buildInfo(),
-    touchStart: null
+    touchStart: null,
+    floorAnimationData: {},
+    floorTouchStart: null,
+    floorMove: 0
   },
 
   /**
@@ -27,7 +30,7 @@ Page({
         app.globalData = res;
         self.setData({
           mapCavasW : app.globalData.windowWidth,
-          mapCavasH: app.globalData.windowHeight
+          mapCavasH: app.globalData.windowHeight - 41
         });
         console.log(self.data.mapCavasW + ',' + self.data.mapCavasH)
       },
@@ -52,15 +55,21 @@ Page({
   onShow: function () {
     const compass = wx.createAnimation({
       transformOrigin: "50% 50%",
-      duration: 1000,
-      timingFunction: "ease",
+      duration: 20,
+      timingFunction: "linear",
       delay: 0
     });
     this.compass = compass
     this.compass.rotate(0).step();
     this.setData({
       compassData: compass.export()
-    })
+    });
+
+    var floorAnimation = wx.createAnimation({
+      duration: 1000,
+      timingFunction: 'ease',
+    });
+    this.floorAnimation = floorAnimation;
   },
 
   /**
@@ -110,6 +119,47 @@ Page({
       chooseFloorShow: false
     });
     console.log(this.data.curFloor);
+  },
+  flootTouchStart: function(e){
+    // console.log(e.touches[0].clientY)
+    this.setData({
+      floorTouchStart: e.touches[0]
+    })
+  },
+  flootTouchMove: function(e) {
+    // const flootTouchStartX = this.data.floorTouchStart.clinetX;
+    const flootTouchStartY = this.data.floorTouchStart.clientY;
+    // console.log(flootTouchStartY);
+
+    // const flootMoveX = e.touches[0].clinetX;
+    const floorMoveY = e.touches[0].clientY;
+
+    let curMove = floorMoveY - flootTouchStartY;
+    this.setData({
+      floorTouchStart: e.touches[0]
+    })
+    
+    if (this.data.floorList.length > 5 ) {
+      
+      if (this.data.floorMove > -(this.data.floorList.length - 5) * 32 && curMove < 0 ) { // 向下滚
+        
+        // console.log(curMove);
+        this.setData({
+          floorMove: curMove + this.data.floorMove
+        })
+      } else if (this.data.floorMove < 0 && curMove > 0) { // 向上滚
+        this.setData({
+          floorMove: curMove + this.data.floorMove
+        })
+      }
+    }
+    console.log('xx' + curMove)
+    console.log(this.data.floorMove);
+    this.floorAnimation.translateY(this.data.floorMove).step()
+    this.setData({
+      floorAnimationData: this.floorAnimation.export()
+    })
+    
   },
   chooseFloor: function() {
     const chooseFloorShow = !this.data.chooseFloorShow;
