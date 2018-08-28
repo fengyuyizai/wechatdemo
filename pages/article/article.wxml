@@ -1,9 +1,0 @@
-<view class='continer'>
-  <text class='title'>{{curArticle.title}}</text>
-  <view class='image'>
-    <image src='{{curArticle.imgUrl}}' mode='center'></image>
-  </view>
-  <text class='message'>
-    {{curArticle.message}}
-  </text>
-</view>

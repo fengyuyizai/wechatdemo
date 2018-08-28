@@ -1,79 +1,190 @@
-/**index.wxss**/
-
-.my-swiper{
-  width: 100%;
+/* 地图样式 */
+.mapCanvas{
+  position: absolute;
+  z-index: 1;
 }
 
-.body{
-  margin-top: 50rpx;
-}
-.body .body-header{
-  height: 140rpx;
+/**控件样式**/
+.mapControls{
+  position: absolute;
   width: 100%;
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
+  height: 100%;
+  /* z-index: 3; */
 }
-.body .body-header .body-Hitem{
-  /* border: 1px solid #ddd; */
+.mapControls .header{
+  position: relative;
   display: flex;
-  flex-grow: 1;
-  height: 140rpx;
-  flex-direction:column;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  opacity: 90;
+  z-index: 3;
 }
-.body .body-header .body-Hitem .body-Hitem-img{
-  width: 70rpx;
-  height: 70rpx;
-  /* display: flex; */
+.mapControls .header .header_seach{
+  border: 1px solid #ddd;
+  height: 83rpx;
+  font-size: 13px;
+  box-sizing: border-box;
+  width: 612rpx;
+  display: inline-block;
+  color: rgb(153, 153, 153);
+  padding-left: 58rpx;
+  margin-right: 13rpx;
+  background-color: #fff;
+  box-shadow:0px 1px 10px 0px rgba(0,0,0,0.16);
+  border-radius: 4rpx;
 }
-.body .body-header .body-Hitem text{
-  font-size: 12px;
-  line-height: 50rpx;
+.mapControls .header .seach_icon {
+  position: absolute;
+  align-self:center;
+  width: 31rpx;
+  height: 31rpx;
+  left: 42rpx;
+}
+.mapControls .header .song_icon {
+  position: absolute;
+  align-self:center;
+  width: 21rpx;
+  height: 31rpx;
+  right: 140rpx;
+}
+.mapControls .header .header_submit{
+  height:  83rpx;
+  font-size: 13px;
+  text-align: center;
+  width: 83rpx;
+  padding: 0;
+  line-height: 83rpx;
+  background-color: #fff;
+  color: #5A8CE7;
+  display: inline-block;
+  box-shadow:0px 1px 10px 0px rgba(0,0,0,0.16);
+  border-radius: 4rpx;
 }
 
-.body .body-session{
-  background-color: #ececec
+.mapControls .guide{
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  margin-left: 21rpx;
+  z-index: 3;
 }
-.body .body-session .body-session-title{
-  display: block;
-  padding-top: 20rpx;
-  font-size: 16px;
-  
-}
-.body .body-session .body-session-item{
-  width: 100%;
-  /* border: 1px solid #e4e4e4; */
-  border-bottom: 1px solid #acacac;
-  border-top: 1px solid #d5d5d5;
-  margin-top: 20rpx;
+.mapControls .guide text{
+  font-size: 20rpx;
   background-color: #fff;
+  border-radius: 5rpx;
+  padding: 5rpx 10rpx;
+  box-shadow:0px 1px 10px 0px rgba(0,0,0,0.16);
+  margin: 5rpx 0;
+  margin-top: 15rpx;
 }
-.body .body-session .body-session-item .title{
-  display: block;
-  width: 100%;
-  height: 70rpx;
-  line-height: 70rpx;
-  padding-left: 20rpx;
-  color: #9e9e9e;
-  box-sizing:border-box;
+.mapControls .guide .compass_icon{
+  width: 67rpx;
+  height: 67rpx;
+  margin: 5rpx 0;
 }
-.body .body-session .body-session-item .article{
+
+.mapControls .rightControls {
+  position: absolute;
+  bottom: 42rpx;
+  right: 13rpx;
+  width: 74rpx;
+  height: 343rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 3;
+}
+.mapControls .rightControls .shijing{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 68rpx;
+  height: 97rpx;
+  border-radius: 34rpx;
+  background-color: #fff;
+  box-shadow:0px 3px 3px 0px rgba(90,140,231,0.42);
+  margin: 20rpx 0;
+}
+.mapControls .rightControls .shijing view{
+  width: 46rpx;
+  height: 46rpx;
+  border-radius: 50%;
+  background-color: #6A9AF3;
+  font-size: 17rpx;
+  color: #fff;
+  line-height: 46rpx;
+  text-align: center;
+}
+.mapControls .rightControls .button {
+  width: 74rpx;
+  height: 74rpx;
+  text-align: center;
+  line-height: 74rpx;
+  background-color: #fff;
+  color: #6A9AF3;
+  font-size: 40rpx;
+  border-radius: 50%;
+  box-shadow:0px 3px 3px 0px rgba(90,140,231,0.42);
+  margin: 15rpx 0;
+}
+.mapControls .rightControls .add{
+
+}
+
+.mapControls .leftControls{
+  position: absolute;
+  left: 21rpx;
+  bottom: 45rpx;
+  z-index: 3;
+}
+
+.mapControls .leftControls .chooseFloor{
+  width: 68rpx;
+  height:283rpx;
   
-  
+  box-sizing: border-box;
+  background-color: #fff;
+  border-radius: 34rpx;
+  box-shadow:0px 3px 3px 0px rgba(90,140,231,0.42);
+  padding: 0 10rpx;
+  padding-top: 10rpx;
 }
-.body .body-session .body-session-item .article image{
-  width: 100%;
-  height: 250rpx;
+::-webkit-scrollbar{
+width: 0;
+height: 0;
+color: transparent;
 }
-.body .body-session .body-session-item .article .message{
-  line-height: 50rpx;
-  font-size: 14px;
+.mapControls .leftControls .chooseFloor .floorItem{
+  width:46rpx;
+  height:46rpx;
+  background:rgba(223,223,223,1);
+  border-radius:50%;
+  font-size: 18rpx;
+  line-height: 46rpx;
+  text-align: center;
+  margin: 7rpx 0;
+}
+.mapControls .leftControls .chooseFloor .floorItem.curfloor{
+  background-color: #5A8CE7;
+  color: #fff;
+}
+.mapControls .leftControls .curFloor{
+  width:68rpx;
+  height:68rpx;
+  border-radius:50%;
+  font-size: 29rpx;
+  line-height: 68rpx;
+  text-align: center;
+  background-color: #5A8CE7;
+  color: #fff;
+  margin: 21rpx 0;
+}
+.mapControls .leftControls .location{
+  width: 42rpx;
+  height: 42rpx;
   padding: 20rpx;
-  display: block;
-  max-height: 80rpx;
-  overflow: hidden;
-  text-overflow:ellipsis;
-  word-break:break-all;
+  border-radius: 50%;
+  box-shadow:0px 3rpx 3rpx 0px rgba(90,140,231,0.42);
+  background-color: #fff;
 }

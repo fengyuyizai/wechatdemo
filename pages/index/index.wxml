@@ -1,56 +1,46 @@
 <!--index.wxml-->
-
-<swiper
-  autoplay="true" interval="{{banner.interval}}" duration="{{banner.duration}}">
-  <block wx:for="{{banner.imgUrls}}" wx:key="{{index}}">
-    <swiper-item>
-      <image src="{{item}}" class="slide-image my-swiper" height="150" mode="center"/>
-    </swiper-item>
-  </block>
-</swiper>
-
-<view class='body'>
-  <view class='body-header'>
-    <view class="body-Hitem">
-      <image src='../image/nav1.png' class='body-Hitem-img'></image>
-      <text>钱包</text>
-    </view>
-    <view class="body-Hitem">
-      <image src='../image/nav2.png' class='body-Hitem-img'></image>
-      <text>外卖</text>
-    </view>
-    <view class="body-Hitem">
-      <image src='../image/nav3.png' class='body-Hitem-img'></image>
-      <text>打印</text>
-    </view>
-    <view class="body-Hitem">
-      <image src='../image/nav4.png' class='body-Hitem-img'></image>
-      <text>美食</text>
-    </view>
-    <view class="body-Hitem">
-      <image src='../image/nav5.png' class='body-Hitem-img'></image>
-      <text>设置</text>
-    </view>
+<view>
+  <view class='mapCanvas'>
+    <canvas 
+      canvas-id='mapCanvas'  
+      style='width:{{mapCavasW}}px; height:{{mapCavasH}}px'
+      bindtouchmove="touchmove"
+      bindtouchstart='touchstart'></canvas>
   </view>
-  <view class='body-session'>
-  <text class='body-session-title'>热点文章</text>
-    <!-- <view class='body-session-item'>
-      <text class='title'>标题</text>
-      <view class='article'>
-        <image src='../image/img1.jpg' mode="center"></image>
-        <text class='message'>这是文字介绍</text>
-      </view>
-    </view> -->
-    <block wx:for="{{article}}" wx:key="{{index}}">
-      <view class='body-session-item'>
-        <navigator open-type="navigate" url="../article/article?code={{item.code}}">
-          <text class='title'>{{item.title}}</text>
-          <view class='article'>
-            <image src='{{item.imgUrl}}' mode="center"></image>
-            <text class='message'>{{item.message}}</text>
-          </view>
-        </navigator>
+  <view class='mapControls'>
+    <view class='header'>
+      <image src="../../state/images/seach.png" mode="scaleToFill" class='seach_icon'></image>
+      <input class='header_seach' placeholder="搜索地名"></input>
+      <image src="../../state/images/song.png" mode="scaleToFill" class='song_icon'></image>
+      <view class='header_submit'>科室</view>
     </view>
-    </block>
+    <view class='guide'>
+      <text>定位地点</text>
+      <image src='../../state/images/compass.png' mode='scaleToFill' class='compass_icon' animation="{{compassData}}" bindtap="resetDirection"></image>
+    </view>
+    <view class='leftControls'>
+      <scroll-view scroll-y class='chooseFloor' wx:if="{{chooseFloorShow}}">
+        <view 
+        wx:for="{{floorList}}" 
+        wx:key="{{index}}" 
+        data-num="{{index}}" 
+        class='floorItem {{curFloor == item?"curfloor": ""}}' 
+        bindtap='confirmFloor'>
+          <text>{{item}}</text>
+        </view>
+      </scroll-view>
+      <view class='curFloor' bindtap='chooseFloor'>
+        {{curFloor}}
+      </view>
+      <image src='../../state/images/location.png' mode='scaleToFill' class='location'></image>
+    </view>
+    <view class='rightControls'>
+      <view class='shijing'>
+        <view>实景</view>
+      </view>
+      <view class='add button'>+</view>
+      <view class='minu button'>-</view>
+    </view>
   </view>
 </view>
+

@@ -11,9 +11,9 @@
 		"newFeature": true
 	},
 	"compileType": "miniprogram",
-	"libVersion": "2.2.1",
-	"appid": "wx75a990330ff784a6",
-	"projectname": "demo",
+	"libVersion": "2.2.3",
+	"appid": "wxc59afe2f3e003dd3",
+	"projectname": "Code",
 	"isGameTourist": false,
 	"condition": {
 		"search": {
