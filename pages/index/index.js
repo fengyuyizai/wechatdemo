@@ -15,6 +15,15 @@ Page({
     curFloor: '1F',
     buildInfo: stateData.buildInfo(),
     touchStart: null,
+    centerPoint: {
+      x: 0,
+      y: 0
+    },
+    scale: 1,
+    maxScale: 3,
+    minScale: 0.5,
+    ruleWidth: 100,
+    rule: 100,
     floorAnimationData: {},
     floorTouchStart: null,
     floorMove: 0
@@ -28,6 +37,7 @@ Page({
     wx.getSystemInfo({
       success: function(res) {
         app.globalData = res;
+        
         self.setData({
           mapCavasW : app.globalData.windowWidth,
           mapCavasH: app.globalData.windowHeight - 41
@@ -35,6 +45,7 @@ Page({
         console.log(self.data.mapCavasW + ',' + self.data.mapCavasH)
       },
     })
+    
   },
 
   /**
@@ -55,7 +66,7 @@ Page({
   onShow: function () {
     const compass = wx.createAnimation({
       transformOrigin: "50% 50%",
-      duration: 20,
+      duration: 1000,
       timingFunction: "linear",
       delay: 0
     });
@@ -70,6 +81,8 @@ Page({
       timingFunction: 'ease',
     });
     this.floorAnimation = floorAnimation;
+    // 初始化地图中心点
+    this.initMapCenterPoint()
   },
 
   /**
@@ -154,7 +167,6 @@ Page({
       }
     }
     console.log('xx' + curMove)
-    console.log(this.data.floorMove);
     this.floorAnimation.translateY(this.data.floorMove).step()
     this.setData({
       floorAnimationData: this.floorAnimation.export()
@@ -195,6 +207,17 @@ Page({
 
     });
     ctx.draw();
+
+  },
+  initMapCenterPoint: function (offestMap, scaleMap) {
+    let offest = offestMap && offestMap.x ? offestMap :  {x: 0, y: 0}; // 偏移量初始化
+    let scale = scaleMap ? scaleMap : 1; // 放大倍数初始化
+    let centerPoint = { x: 0, y: 0 }; // 中心点声明
+    centerPoint.x = (app.globalData.windowWidth / 2 + offest.x) * scale;
+    centerPoint.y = ((app.globalData.windowHeight - 41) / 2 + offest.y) * scale;
+    this.setData({
+      centerPoint
+    })
   },
   // 绘制建筑物名称下的圆角矩形
   drawRoundedRect: function(rect, r, ctx) {
@@ -249,12 +272,13 @@ Page({
     })
     // 更新地图
     this.initMap();
+    this.initMapCenterPoint({x: moveX, y: moveY})
   },
   // 控制地图缩放
   mapScale: function(touches) {
     let buildInfo = this.data.buildInfo;
-    const toucheOne = touches[0];
-    const toucheTwo = touches[1];
+    const toucheOne = touches[0]; // 指头1
+    const toucheTwo = touches[1]; // 指头2
     
     let scaleX = toucheOne.x - toucheTwo.x;
     let scaleY = toucheOne.y - toucheTwo.y;
@@ -264,40 +288,87 @@ Page({
     const startToucheTwo = this.data.touchStart[1];
 
     let startScaleX = startToucheOne.x - startToucheTwo.x;
-    let startScaleY = startToucheTwo.y - startToucheTwo.y;
+    let startScaleY = startToucheOne.y - startToucheTwo.y;
     let startScale = Math.sqrt(Math.pow(startScaleX, 2) + Math.pow(startScaleY, 2));
 
+    // console.log('touchOne:' + toucheOne.x + ',' + toucheOne.y + '\ntouchTwo:' + toucheTwo.x + ',' + toucheTwo.y + "\nscale:" + moveScale)
+    // console.log('startToucheOne:' + startToucheOne.x + ',' + startToucheOne.y + '\nstartToucheTwo:' + startToucheTwo.x + ',' + startToucheTwo.y + "\nscale:" + startScale)
+
+    let singleScale;
+    // 判定手势是放大还是缩小
+    // console.log(moveScale + ',' + startScale);
+    if (moveScale > startScale) { // 放大手势
+      singleScale = (moveScale / this.data.mapCavasW) * 2;
+      // console.log('放大手势:' + scale);
+    } else {
+      singleScale = ((moveScale - startScale) / this.data.mapCavasW) * 2 + 1;
+      // console.log('缩小手势:' + scale);
+    }
+
     // 地图放大倍数
-    let scale = startScale / moveScale ;
+    this.data.scale = singleScale;
+
+    // 地图倍数限制
+    if (this.data.scale >= this.data.maxScale) {
+      this.setData({
+        scale: this.data.maxScale
+      })
+    } else if (this.data.scale <= this.data.minScale) {
+      this.setData({
+        scale: this.data.minScale
+      })
+    }
+    let scale = this.data.scale;
+    console.log('scale:' + scale);
+
     // 地图放大中心点
     let centerPoint = {
-      x: scaleX / 2,
-      y: scaleY / 2
+      x: this.data.centerPoint.x,
+      y: this.data.centerPoint.y
     }
-    // 重置初始点，防止倍率累加
-    this.setData({
-      touchStart: touches
-    });
 
-    wx.showModal({
-      title: '倍率',
-      content: scale,
-      success: function (res) {
-        if (res.confirm) {
-          console.log('用户点击确定')
-        } else if (res.cancel) {
-          console.log('用户点击取消')
-        }
-      }
-    });
-
+    // // 重置触控初始点，防止倍率累加
+    // this.setData({
+    //   touchStart: touches
+    // });
+    let newPostionX, newPostionY;
+    if (this.data.ruleWidth * scale > this.data.rule * 3 || this.data.ruleWidth * scale < this.data.rule * 0.5) { // 设置地图缩放界限
+      return
+    } else {
+      this.setData({
+        ruleWidth: this.data.ruleWidth * scale
+      })
+    }
+    if(this.data.ruleWidth)
     buildInfo.forEach((item, index) => {
+
+      // 建筑物大小放大缩小
       item.position[0] *= scale;
       item.position[1] *= scale;
-      item.position[2] = (item.position[2] - centerPoint.x) * scale;
-      item.position[3] = (item.position[3] - centerPoint.y) * scale;
+      // 建筑物位置放大缩小
+      let a = Math.abs(centerPoint.x - item.position[2]); // a为距离中心点横向距离
+      let b = Math.abs(centerPoint.y - item.position[3]); // b为距离中心点纵向距离
+      if(item.position[2] <= centerPoint.x && item.position[3] < centerPoint.y) { // 第二象限
+          newPostionX = centerPoint.x - a * scale;
+          newPostionY = centerPoint.y - b * scale;
+      } else if (item.position[2] > centerPoint.x && item.position[3] <= centerPoint.y) { // 第一象限
+        newPostionX = centerPoint.x + a * scale;
+        newPostionY = centerPoint.y - b * scale;
+      } else if (item.position[2] >= centerPoint.x && item.position[3] > centerPoint.y) { // 第四象限
+        newPostionX = centerPoint.x + a * scale;
+        newPostionY = centerPoint.y + b * scale;
+      } else if (item.position[2] < centerPoint.x && item.position[3] >= centerPoint.y) { // 第三象限
+        newPostionY = centerPoint.y + b * scale;
+        newPostionX = centerPoint.x - a * scale;
+      } else if (item.position[2] == centerPoint.x && item.position[3] == centerPoint.y) { // 坐标原点
+        newPostionX = centerPoint.x;
+        newPostionY = centerPoint.y
+      } 
+      item.position[2] = newPostionX;
+      item.position[3] = newPostionY;
     })
     // 更新地图
     this.initMap();
+    this.initMapCenterPoint({}, scale)
   }
 })
