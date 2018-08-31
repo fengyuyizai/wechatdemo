@@ -40,8 +40,8 @@
       <cover-view class='shijing'>
         <cover-view>实景</cover-view>
       </cover-view>
-      <cover-view class='add button'>+</cover-view>
-      <cover-view class='minu button'>-</cover-view>
+      <cover-view class='add button' catchtap='addScale'>+</cover-view>
+      <cover-view class='minu button' catchtap='minuScale'>-</cover-view>
     </view>
   </view>
 </view>

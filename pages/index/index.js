@@ -27,9 +27,11 @@ Page({
     ruleWidth: 100, // 放大尺寸--尺寸改变值
     rule: 100,  // 放大尺寸--固定值
     rotate: 0, // 旋转值
+    singleMaxRoate: 0.1,
     floorAnimationData: {},
     floorTouchStart: null,
-    floorMove: 0
+    floorMove: 0,
+    firstLoad: true
   },
 
   /**
@@ -59,7 +61,9 @@ Page({
     this.setData({
       ctx: ctx
     })
-    this.initMap()
+
+    this.initMapCenterPoint();
+    this.initMap();
     console.log(stateData.buildInfo())
   },
 
@@ -85,7 +89,7 @@ Page({
     });
     this.floorAnimation = floorAnimation;
     // 初始化地图中心点
-    this.initMapCenterPoint()
+    
   },
 
   /**
@@ -180,19 +184,33 @@ Page({
     })
   },
   initMap: function () {
+    ctx.transform(0, 0, 0, 0, 0, 0);
     this.initMapFont();
+    
     ctx.draw();
   },
   initMapFont: function () {
+    
+    let offestX = 0,
+        offestY = 0;
+    if (this.data.firstLoad) { // 第一次加载数据时修改建筑物的坐标参数
+      offestX = this.data.centerPoint.x;
+      offestY = this.data.centerPoint.y;
+      // console.log(offestX + ',' + offestY);
+      
+      this.setData({
+        firstLoad: true
+      })
+    }
     const self = this;
     this.data.buildInfo.forEach((item, index) => {
       
       ctx.setFillStyle(item.color);
-      ctx.fillRect(item.position[2], item.position[3], item.position[0], item.position[1]);
+      ctx.fillRect(item.position[2] - offestX, item.position[3] - offestY, item.position[0], item.position[1]);
       ctx.setFillStyle("#fff");
 
-      const fontX = item.position[0] / 2 + item.position[2];
-      const fontY = item.position[1] / 2 + item.position[3];
+      const fontX = item.position[0] / 2 + item.position[2] - offestX;
+      const fontY = item.position[1] / 2 + item.position[3] - offestY;
       const fontMaxX = item.position[0] / 1.5;
       const fontBackgroundW = item.name.length * 20;
       const fontBackgroundH = 20;
@@ -211,17 +229,17 @@ Page({
 
     });
   },
+  // 数据统计完毕之后调用改函数，对地图进行重新绘制
   changeMap: function(scale, rotate, translate) {
-    translate.x += this.data.centerPoint.x * (scale - 1); // 对横轴偏移量进行计算
-    translate.y += this.data.centerPoint.y * (scale - 1); // 对纵轴偏移量进行计算
+    translate.x *= scale; // 对横轴偏移量进行计算
+    translate.y *= scale; // 对纵轴偏移量进行计算
     this.setData({
       translateX: this.data.translateX + translate.x,
       translateY: this.data.translateY + translate.y
     })
     // console.log(translate)
     ctx.translate(this.data.centerPoint.x, this.data.centerPoint.y)
-    ctx.setTransform(scale, 0, 0, scale, this.data.translateX, this.data.translateY);
-    
+    ctx.setTransform(scale, 0, 0, scale, this.data.translateX + this.data.centerPoint.x, this.data.translateY + this.data.centerPoint.y);
     ctx.rotate(rotate)
     this.initMapFont();
     // ctx.translate(translate.x, translate.y)
@@ -231,8 +249,15 @@ Page({
     let offest = offestMap && offestMap.x ? offestMap :  {x: 0, y: 0}; // 偏移量初始化
     let scale = scaleMap ? scaleMap : 1; // 放大倍数初始化
     let centerPoint = { x: 0, y: 0 }; // 中心点声明
-    centerPoint.x = (app.globalData.windowWidth / 2 + offest.x) * scale;
-    centerPoint.y = ((app.globalData.windowHeight - 41) / 2 + offest.y) * scale;
+    // if (this.data.firstLoad) {
+    //   centerPoint.x = (this.data.mapCavasW + offest.x) * scale;
+    //   centerPoint.y = (this.data.mapCavasH + offest.y - 20) * scale;
+    // } else {
+    //   centerPoint.x = offest.x * scale;
+    //   centerPoint.y = (offest.y - 20) * scale;
+    // }
+    centerPoint.x = (this.data.mapCavasW / 2 + offest.x) * scale;
+    centerPoint.y = (this.data.mapCavasH / 2 + offest.y - 20) * scale;
     this.setData({
       centerPoint
     })
@@ -291,7 +316,7 @@ Page({
     // 更新地图
     // this.initMap();
     this.initMapCenterPoint({x: moveX, y: moveY}, this.data.scale)
-    this.changeMap(1, 0, { x: moveX, y: moveY })
+    this.changeMap(this.data.scale, this.data.rotate, { x: moveX, y: moveY })
   },
   // 控制地图缩放
   getScale: function(touches) {
@@ -349,6 +374,12 @@ Page({
 
     // singRoate 为单次旋转值单位是弧度， 若值为正，则方向为逆时针， 反之，则为顺时针
     singRoate = moveRadian - startRadian;
+    if (singRoate > this.data.singleMaxRoate) {
+      singRoate = this.data.singleMaxRoate;
+    } else if (singRoate < -this.data.singleMaxRoate) {
+      singRoate = -this.data.singleMaxRoate
+    }
+    console.log('singRoate' + this.data.rotate);
     this.setData({
       rotate: singRoate + this.data.rotate
     })
@@ -428,11 +459,22 @@ Page({
     // 更新地图
     // this.initMap();
     this.initMapCenterPoint({}, scale);
-    this.changeMap(scale, 0, {x:0,y:0});
+    this.changeMap(scale, this.data.rotate, {x:0,y:0});
     
   },
-  controlRotateMap: function() {
+  controlRotateMap: function(rotate) {
+    this.setData({
+      rotate: rotate + this.data.rotate
+    })
     this.initMapCenterPoint({}, this.data.scale);
     this.changeMap(this.data.scale, this.data.rotate, { x: 0, y: 0 });
+  },
+  addScale: function() {
+    this.controlScaleMap(1.1)
+    // this.controlRotateMap(0.1);
+  },
+  minuScale: function() {
+    this.controlScaleMap(0.9)
+    // this.controlRotateMap(-0.1);
   }
 })
