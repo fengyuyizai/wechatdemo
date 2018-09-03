@@ -184,7 +184,8 @@ Page({
     })
   },
   initMap: function () {
-    ctx.transform(0, 0, 0, 0, 0, 0);
+    // ctx.transform(0, 0, 0, 0, -375 / 2, -562 / 2);
+    ctx.translate(this.data.mapCavasW / 2, this.data.mapCavasH / 2)
     this.initMapFont();
     
     ctx.draw();
@@ -352,6 +353,7 @@ Page({
       // console.log('缩小手势:' + scale);
     }
 
+    // console.log('singleScale:' + singleScale);
     // 地图放大倍数
     this.data.scale = singleScale;
     // ----------------end放大地图------------------
@@ -379,7 +381,7 @@ Page({
     } else if (singRoate < -this.data.singleMaxRoate) {
       singRoate = -this.data.singleMaxRoate
     }
-    console.log('singRoate' + this.data.rotate);
+    // console.log('singRoate' +  singRoate + "this.data.rotate:" +  this.data.rotate);
     this.setData({
       rotate: singRoate + this.data.rotate
     })
@@ -463,8 +465,9 @@ Page({
     
   },
   controlRotateMap: function(rotate) {
+    let curRotate = rotate? rotate : 0
     this.setData({
-      rotate: rotate + this.data.rotate
+      rotate: curRotate + this.data.rotate
     })
     this.initMapCenterPoint({}, this.data.scale);
     this.changeMap(this.data.scale, this.data.rotate, { x: 0, y: 0 });
