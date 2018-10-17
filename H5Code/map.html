@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+
+<html lang="en" class="noscroll">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+	<title>Document</title>
+</head>
+
+<link rel="stylesheet" type="text/css" href="static/css/main.css">
+<body>
+
+<canvas id="mapCanvas"></canvas>
+
+<!-- <div class="contain"> -->
+  <header class="contain_header">
+    <input type="text" name="seach" class="seach">
+    <img src="static/images/song.png">
+    <div class="seach_keshi" id="seach_keshi">科室</div>
+  </header>
+  <div class="contain_bangong">
+    <div class="bangong" id="bangong">办公区</div>
+    <div class="compass" id="compass">
+      <img src="static/images/compass.png">
+    </div>
+  </div>
+  <div class="contain_left">
+    <div class="floor">
+      <div class="selectFloor">
+        <ul class="content" id="floorContent">
+        </ul>
+      </div> 
+      <div class="curFloor radio_button" id="curFloor">1F</div>
+    </div>
+    <div class="radio_button location"></div>
+  </div>
+  <div class="contain_right">
+    <div class="shijing">
+      <div><span>实景</span></div>
+    </div>
+    <div class="scaleBtn addScale" id="addScale">+</div>
+    <div class="scaleBtn addScale" id="minScale">-</div>
+  </div>
+  <!--快速选择地址模态框 -->
+  <div class="quickPosition" id="quickPosition">
+    <div class="wrpper"></div>
+    <div class="bgmTransparent" id="quickPositionHide"></div>
+  </div>
+  <!--到这里模块框 -->
+  <div class="comeHereModal" id="comeHereModal">
+    <div class="comeHereModal_contain">
+      <section class="body">
+        <div class="position"></div>
+        <div class="floor"></div>
+        <img class="comeHere-icon" src="static/images/comeHere.png" id="comeHere-icon">
+        <div class="shareFriend">
+          <p>发送位置给好友</p>
+        </div>
+      </section>
+    </div>
+  </div>
+  <!-- 路线规划信息模态框 -->
+  <div class="planWayModal" id="planWayModal">
+    <div class="planWayModal_contain">
+      <p class="title">路线规划信息</p>
+      <div class="selectPoint startPoint">
+        <div>1F 办公区 2</div>
+      </div>
+      <div class="selectPoint endPoint">
+        <div>1F 办公区 3</div>
+      </div>
+      <div class="navigationBtn">
+        <div class="simulation">模拟导航</div>
+        <div class="real">开始导航</div>
+      </div>
+    </div>
+  </div>
+
+<!-- </div> -->
+<script type="text/javascript" src="static/data/buildData.json"></script>
+<script type=text/javascript src='static/data/quickPositionData.json'></script>
+<script type="text/javascript" src="static/data/roadPoint.json"></script>
+
+<script type="text/javascript" src="static/js/betterScalle-min.js"></script>
+<script type="text/javascript" src="static/js/quickPosition.js"></script>
+<script type="text/javascript" src="static/js/seachRoad.js"></script>
+<script type="text/javascript" src="static/js/comeHereModal.js"></script>
+<script type="text/javascript" src="static/js/planWayModal.js"></script>
+<script type="text/javascript" src="static/js/drawRoad.js"></script>
+
+<script>
+    // 全局变量
+
+    // --楼层变量
+    let floor = ['1F', '2F', '3F', '4F', '5F'],
+        curFloor = 2,
+        showFloor = false;
+
+    // 选择楼层
+    const floorContentDom = document.getElementById('floorContent');
+    const curFloorDom = document.getElementById('curFloor');
+    const selectFloorDom = document.querySelector('.selectFloor');
+
+    // 初始化楼层选择框
+    initFloorDom();
+
+    function initFloorDom() {
+      floor.forEach((item, index) => {
+        const label = 'li';
+        const event = 'onclick';
+        const eventListener = `chooseFloor(${index})`;
+        appendChildNode(floorContentDom, label, item, event, eventListener);
+        if (index === curFloor) {
+          // console.log(floorContentDom.children)
+          floorContentDom.children[index].setAttribute('class', 'cur');
+        }
+      })
+    }
+
+    // 选择楼层
+    function chooseFloor(index) {
+      console.log(index);
+      curFloor = index;
+      curFloorDom.innerHTML = floor[curFloor];
+
+      floor.forEach((item, index) => {
+        floorContentDom.children[index].removeAttribute('class')
+      })
+      floorContentDom.children[index].setAttribute('class', 'cur');
+      showFloor = !showFloor;
+      selectFloorDom.style.display = 'none';
+    }
+
+    // 控制楼层选择窗出现
+    curFloorDom.addEventListener('click', () => {
+      if (showFloor) {
+        selectFloorDom.style.display = 'block';
+      } else {
+        selectFloorDom.style.display = 'none';
+      }
+      showFloor = !showFloor;
+    })
+
+    // -------------better-scalle-----------------
+    let scroll = new BScroll('.selectFloor',{
+        scrollY: true,
+        click: true,
+        bounceTime: 600
+    })
+    // -------------better-scalle-----------------
+
+    // 动态添加节点 参数: 父节点, 添加节点标签, 新节点内容， 事件类型（选），事件对应监听（选）
+    function appendChildNode(node, label, content, event, eventListener) {
+      const targetlabel=document.createElement(label);
+      const textnode=document.createTextNode(content);
+      if (event) {
+        targetlabel.setAttribute(event, eventListener);
+      }
+      targetlabel.appendChild(textnode);
+      node.appendChild(targetlabel);
+    }
+
+
+  // --------------------------map start---------------------------------
+  // map变量声明
+  // --获取屏幕大小
+    const windowClinetWidth = document.body.clientWidth;
+    const windowClinetHeight = document.body.clientHeight;
+  // -- 获取canvasDOM；  
+    const canvasDom = document.getElementById("mapCanvas");
+    
+    canvasDom.width = windowClinetWidth;
+    canvasDom.height = windowClinetHeight;
+    const ctx=canvasDom.getContext("2d");
+
+    // --旋转位移放大缩小所用变量
+    let rotate = 0, 
+        scale = 1, 
+        translateX = canvasDom.width/2,
+        translateY = canvasDom.height/2,
+        curtranslateX = 0,
+        curtranslateY = 0,
+        singleMaxScale = 0.01,
+        singleMinScale = -0.01,
+        maxScale = 2,
+        minScale = 0.5,
+        singMaxRotate = 0.01,
+        singleRotate = 0;  // 单次旋转值
+    let startTouches;
+    let touchLock = 1;
+    let n = 0; // 旋转越界参数1:[0 , PI]  2: (-PI , 0)
+    let longTouch = 0,  // 长按事件变量
+        timeOutEvent = 0, // 长按事件控制器
+        stepPoint = 1, // 路径导航之设置终点起点步骤位置
+        endPointPosition = null, // 终点坐标信息
+        startPointPosition = null, // 起点坐标信息
+        comeHereModalShow = false,
+        roadList = []
+
+    // 指南针
+    const compass = document.getElementById('compass');
+
+    compass.addEventListener('click', () => {
+      const rotateCompass = -(rotate % (2 * Math.PI)) * 2 * Math.PI // 转化为0-360之间的弧度制
+      changeDirection(rotateCompass);
+      rotate = 0;
+      drawRect(rotate,scale, translateX, translateY);
+    }, false)
+
+    function changeDirection(rotate) {
+      const rotateCompass = (rotate % (2 * Math.PI)) * 360 // 转化为度数
+      // console.log('compass:' + rotateCompass)
+      compass.children[0].style.transform = `rotate(${rotateCompass}deg)`;
+    }
+
+    function initMap() {
+      const offsetX = canvasDom.width / 2
+      const offsetY = canvasDom.height / 2;
+      buildData.areas.forEach((item, index) => {
+
+        ctx.fillStyle = item.areaColor;
+        ctx.fillRect( item.areaX - offsetX, item.areaY - offsetY, item.areaWidth, item.areaHeight)
+        const fontX = item.areaWidth / 2 + item.areaX - offsetX;
+        const fontY = item.areaHeight / 2 + item.areaY - offsetY;
+        const fontMaxX = item.areaWidth / 1.5;
+        const fontBackgroundW = item.areaName.length * 20;
+        const fontBackgroundH = 20;
+        const roundedRect = {
+          x: fontX - fontBackgroundW / 2,
+          y: fontY - fontBackgroundH / 2,
+          height: fontBackgroundH,
+          width: fontBackgroundW
+        };
+        self.drawRoundedRect(roundedRect, 4, ctx)
+        ctx.fillStyle = "#5d5d5d";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle'
+        ctx.fontSize = 15
+        ctx.fillText(item.areaName, fontX, fontY, fontMaxX);
+      })
+
+    }
+
+    function drawRoundedRect(rect, r, ctx) {
+
+      ctx.beginPath();
+      ctx.lineWidth = '5'
+      
+      ctx.arc(rect.x + r, rect.y + r, r, Math.PI, Math.PI * 1.5);
+
+      ctx.arc(rect.x + rect.width -  r, rect.y + r, r, Math.PI * 1.5, Math.PI * 2)
+      
+      ctx.arc(rect.x + rect.width - r, rect.y + rect.height - r, r, 0, Math.PI * 0.5);
+      
+      ctx.arc(rect.x +  r, rect.y + rect.height - r, r, Math.PI * 0.5, Math.PI);
+
+      ctx.fillStyle = '#fff'
+      ctx.strokeStyle = '#fff'
+      ctx.stroke();
+      ctx.fill()
+    }
+
+    function drawRect(singleRotate, scale, translateX, translateY) {
+        ctx.clearRect(-1000,-1000,10000,10000);
+        changeDirection(rotate + singleRotate);
+        
+        ctx.setTransform(scale, 0,0, scale, translateX, translateY);
+        ctx.rotate((rotate + singleRotate) * Math.PI);
+
+        initMap();
+
+        // ctx.save();
+
+        if(endPointPosition) {setEndPoint(endPointPosition, false)}
+        if(startPointPosition) {setStartPoint(startPointPosition, false)}
+    }
+
+
+    // 设置中心点
+    ctx.translate(canvasDom.width/2, canvasDom.height/2);
+
+    // var addRotate = document.getElementById("addRotate")
+    // var minRotate = document.getElementById("minRotate");
+    const addScalebtn = document.getElementById("addScale");
+    const minScalebtn = document.getElementById("minScale");
+
+    // 绘制地图
+    drawRect(rotate, scale, translateX, translateY)
+
+
+    // addRotate.addEventListener("click", function() {
+    // 	rotate += 0.01;
+    // 	drawRect(rotate, scale, translateX, translateY);
+    // });
+   	// minRotate.addEventListener("click", function() {
+   	// 	rotate -= 0.01;
+    // 	drawRect(rotate, scale, translateX, translateY)
+   	// })
+    // 按钮放大缩小
+   	addScalebtn.addEventListener("click", function() {
+   		controlMapInterface(0.5, 0)
+      // controlMapInterface(0, 0.02)
+   	})
+   	minScalebtn.addEventListener("click", function() {
+   		controlMapInterface(-0.2, 0)
+      // controlMapInterface(0, -0.02)
+   	})
+   	
+   	canvasDom.addEventListener("touchstart", function(e) {
+      // console.log
+   		console.log(e);
+      longTouch = 0;
+      timeOutEvent = setTimeout(function() {
+        longTouch = 1;
+      }, 5) 
+      e.preventDefault();
+   		startTouches = e.touches;
+   	}, {passive: false})
+
+   	canvasDom.addEventListener("touchmove", touchmove, {passive: false});
+
+    canvasDom.addEventListener("touchend", touchend);
+
+  function touchend (e) {
+    translateX = translateX + curtranslateX;
+    translateY = translateY + curtranslateY;
+    rotate += singleRotate;
+    singleRotate = 0;
+    curtranslateX = 0;
+    curtranslateY = 0;
+    n = 0;
+    canvasDom.removeEventListener("touchmove", touchmove, false)
+    let TouchMistake = setTimeout(() => {
+      // console.log('重新监听')
+      touchLock = 1;
+      canvasDom.addEventListener("touchmove", touchmove, {passive: true});
+      clearTimeout(TouchMistake)
+      TouchMistake = 0
+    }, 400)
+
+    // 手指抬起后清空长按事件定时器
+    if (timeOutEvent != 0 && longTouch == 1) {    //长按事件
+        //此处为点击事件----在此处添加跳转详情页
+        console.log('长按');
+        longTimeTouch()
+    }
+    clearTimeout(timeOutEvent);
+    timeOutEvent = 0;
+    longTouch = 0;
+
+  }
+  // 读取本地图片，并转化为html元素
+  function readLocalImg(url) {
+    const img = new Image();
+    img.src = url;
+    return img;
+  }
+
+
+  // 区分单指与双指误触操作，方法是初始为单指，当监听到为双指时touchlock改变值为2，直到双指操作结束后300ms变更为1
+  function touchmove (e) {
+    if (e.touches.length === 1) {
+        // 单指操作
+        // 长按事件中途移动，长按事件清空
+        longTouch = 0;
+        clearTimeout(timeOutEvent);
+        timeOutEvent = 0;
+        // 地图移动
+        mapMove(e.touches);
+
+      } else if (e.touches.length === 2) {
+        // 双指操作
+        touchLock = 2;
+        mapCalculation(e.touches);
+      }
+  }
+
+  function mapMove (touches) {
+    let moveTochX = touches[0].clientX;
+    let moveTochY = touches[0].clientY;
+    curtranslateX =  moveTochX - startTouches[0].clientX; // 本次移动值
+    curtranslateY =  moveTochY - startTouches[0].clientY;
+    // const bangong = document.getElementById('bangong')
+    // bangong.innerHTML = `rotate: ${rotate}`;
+    drawRect(0, scale, translateX + curtranslateX, translateY + curtranslateY)
+  }
+
+  function mapRotate(touches) {
+    const toucheOne = touches[0]; // 指头1
+    const toucheTwo = touches[1]; // 指头2
+
+    let scaleX = toucheOne.clientX - toucheTwo.clientX;
+    let scaleY = toucheOne.clientY - toucheTwo.clientY;
+
+    const startToucheOne = startTouches[0];
+    const startToucheTwo = startTouches[1];
+
+    let startScaleX = startToucheOne.clientX - startToucheTwo.clientX;
+    let startScaleY = startToucheOne.clientY - startToucheTwo.clientY;
+
+    
+
+    controlRotateMap(singRoate);
+  }
+
+  function mapCalculation (touches) {
+    const toucheOne = touches[0]; // 指头1
+    const toucheTwo = touches[1]; // 指头2
+    
+    // alert(toucheOne)
+
+    let scaleX = toucheOne.clientX - toucheTwo.clientX;
+    let scaleY = toucheOne.clientY - toucheTwo.clientY;
+    let moveScale = Math.sqrt(Math.pow(scaleX, 2) + Math.pow(scaleY, 2));
+
+    const startToucheOne = startTouches[0];
+    const startToucheTwo = startTouches[1];
+
+    let startScaleX = startToucheOne.clientX - startToucheTwo.clientX;
+    let startScaleY = startToucheOne.clientY - startToucheTwo.clientY;
+    let startScale = Math.sqrt(Math.pow(startScaleX, 2) + Math.pow(startScaleY, 2));
+    // alert(moveScale)
+    let singleScale; // 单次放大缩小值
+
+    singleScale = ((moveScale - startScale) / canvasDom.width) * 1.5;
+    
+    // singleScale = 0.07;
+    if (singleScale >= singleMaxScale) {
+      singleScale = singleMaxScale;
+    } else if (singleScale <= singleMinScale) {
+      singleScale = singleMinScale;
+    }
+    // alert('双指操作:' + singleScale)
+    
+    // ----------------start旋转地图------------------
+    
+    let startRadian = 0, moveRadian = 0;
+
+
+    moveRadian = Math.atan2(scaleY, scaleX);
+    // if (moveRadian >= 3.12 || moveRadian <= -3.12) return;
+
+    // if (startScaleX == 0) { // 排除手指之间线段完全竖直
+    //   startRadian = Math.PI / 2;
+    // } else {
+    //   let startRoate = Math.abs(startScaleY / startScaleX);
+    //   startRadian = Math.atan(startRoate);
+    // }
+
+    startRadian = Math.atan2(startScaleY, startScaleX);
+    
+    // singRoate 为单次旋转值单位是弧度， 若值为正，则方向为逆时针， 反之，则为顺时针
+    singleRotate = moveRadian - startRadian;
+    if (moveRadian < startRadian && startRadian < 0) { // 逆时针转动过界
+      if (moveRadian <= -3.12) {
+        n = 1
+      }
+    }
+    if (moveRadian > startRadian && startRadian > 0) { // 顺时针转动过界
+      if (moveRadian >= 3.12) {
+        n = 2;
+      }
+    }
+
+    if (moveRadian > -Math.PI && n == 1) {
+      singleRotate = moveRadian - Math.PI * 2 - startRadian;
+      // alert('singleRotate' + singleRotate)
+    }
+
+    if (moveRadian < Math.PI && n == 2) {
+      singleRotate = moveRadian + Math.PI * 2 - startRadian;
+      
+    }
+    const bangong = document.getElementById('bangong')
+    bangong.innerHTML = `moveRadian: ${moveRadian} , \nstartRadian: ${startRadian} ,\n singleRotate: ${singleRotate},n:${n}rotate: ${rotate}`;
+    singleRotate /= 8;
+    
+
+    // alert(singRotate)
+
+    // if (singleRotate > singMaxRotate) {
+    //   singleRotate = singMaxRotate
+    // } else if (singleRotate < -singMaxRotate) {
+    //   singleRotate = -singMaxRotate
+    // }
+
+    controlMapInterface(singleScale, singleRotate);
+  }
+
+  function controlMapInterface(singleScale, singleRotate) {
+
+    scale += singleScale; // 倍数累加
+
+    // alert(scale + ',' + rotate)
+    if (scale >= maxScale) {
+      scale = maxScale;
+    } else if(scale <= minScale) {
+      scale = minScale;
+    }
+
+    drawRect(singleRotate, scale, translateX, translateY)
+  }
+
+  // -------------------长按导航start----------------------
+  // 初始化地图导航点
+  createMap()
+  // 到这里去模态框id
+  const comeHereModalDom = document.getElementById('comeHereModal');
+  const comeHereModalData = {
+    title: '未知地点',
+    floor: curFloor
+  };
+
+  // 长按事件
+  function longTimeTouch() {
+    const coordinates = {
+      x: (startTouches[0].clientX - translateX),
+      y: (startTouches[0].clientY - translateY),
+      img: '',
+      title: '未知地点'
+    }
+    // 查询手指触摸点最近的路网点位置
+    const point = findRoadPoint(coordinates);
+    // 导航进行步骤分析
+    navigationStep(point);
+  }
+
+  function navigationStep(point) {
+    let imgUrl = ''
+    // 导航路径选择
+    switch (stepPoint) {
+      case 1:
+        stepPoint = 1;
+        imgUrl = 'static/images/endPoint.png';
+        const endPointIcon = readLocalImg(imgUrl);
+        point.img = endPointIcon;
+        point.img.onload = function () {
+          
+          console.log(point)
+          setEndPoint(point, true); // 参数1为点信息，参数2为是否清除其他已有点；
+        }
+        comeHereModalData.title = point.title
+        // console.log(comeHereModalData);
+        // 生成到这里去模态框
+        comeHereModal.setComeHereModal(comeHereModalData);
+        
+        setNavigationPoint(1, point.colCount, point.rowCount); // 导航设置终点
+        break;
+      case 2:
+        imgUrl = 'static/images/startPoint.png';
+        const startPointIcon = readLocalImg(imgUrl);
+        point.img = startPointIcon;
+        stepPoint = 3;
+        point.img.onload = function () {
+          setStartPoint(point, true);
+        }
+        // console.log('startPoint' + JSON.stringify(point));
+        setNavigationPoint(2, point.colCount, point.rowCount);// 导航设置起点
+        break;
+
+    }
+    if(stepPoint === 3) {
+      console.log('寻路开始');
+      let promise = new Promise(function(resolve,reject){
+          roadList = startFindPoint(); // 开启寻路查找
+          // console.log('Promise:' , roadList);
+          resolve();
+      });
+      promise.then(() => {
+        ctx.clearRect(-1000,-1000,10000,10000);
+          console.log('resolved');
+          setRoad(true);
+      });
+      // startFindPoint(); // 开启寻路查找
+    }
+  }
+
+  function setRoad(clearAll) {
+    if (clearAll) {
+      ctx.clearRect(-1000,-1000,10000,10000);
+      initMap();
+    }
+    const drawRoad = new DrawRoad(ctx, roadList);
+    drawRoad.draw();
+  }
+
+  // 设置终点
+  function setEndPoint(coordinates, clearAll) {
+    if (clearAll) {
+      ctx.clearRect(-1000,-1000,10000,10000);
+      initMap();
+    }
+    endPointPosition = Object.assign({}, coordinates);
+    // console.log(endPointPosition)
+    // let fenzi = parseInt(scale * 100); // 此值作用为去除画布放大后的坐标变化
+    
+    // 绘制终点图标
+    // ctx.restore();
+    ctx.drawImage(endPointPosition.img, endPointPosition.x  - 13, endPointPosition.y - 43);
+    
+  }
+
+  // 设置起点
+  function setStartPoint(coordinates, clearAll) {
+    if (clearAll) {
+      ctx.clearRect(-1000,-1000,10000,10000);
+      initMap();
+    }
+    startPointPosition = Object.assign({}, coordinates);
+    ctx.drawImage(coordinates.img, coordinates.x - 13, coordinates.y - 43)
+  }
+
+  function findRoadPoint(point) {
+    let minDistance = 100000000;
+    let minPoint = JSON.parse(JSON.stringify(point));
+    let seachBuildResult = false
+    let seachBuildRoadID = 0;
+    // console.log('起始点：' + JSON.stringify(minPoint))
+    buildData.areas.forEach((buildItem, buildIndex) => {
+      if (buildItem.areaX < point.x + canvasDom.width / 2 && buildItem.areaY < point.y + canvasDom.height / 2 && buildItem.areaWidth > point.x + canvasDom.width / 2 - buildItem.areaX && buildItem.areaHeight > point.y  + canvasDom.height / 2 - buildItem.areaY) {
+        minPoint.x = buildItem.areaX + buildItem.areaWidth / 2 - canvasDom.width / 2;
+        minPoint.y = buildItem.areaY + buildItem.areaHeight / 2 - canvasDom.height / 2;
+        minPoint.title = buildItem.areaName;
+        seachBuildResult = true;
+        seachBuildRoadID = buildItem.aboutRoadId;
+        console.log('findRoadPoint' + JSON.stringify(minPoint));
+      }
+    })
+    roadPointdata.roadPoint.forEach((roaditem, colCount) => {
+      roaditem.forEach((item, rowCount) => {
+        // console.log(item)
+        if (seachBuildResult) {
+          if (item.roadId == seachBuildRoadID){
+            minPoint.colCount = colCount;
+            minPoint.rowCount = rowCount;
+          }
+        } else {
+          const distance = Math.abs(Math.sqrt(Math.pow((item.roadX - canvasDom.width / 2) * scale - point.x, 2) + Math.pow((item.roadY - canvasDom.height / 2) * scale - point.y, 2)));
+          // console.log(distance)
+          if (distance < minDistance) {
+            minDistance = distance;
+            minPoint.x = item.roadX - canvasDom.width / 2;
+            minPoint.y = item.roadY - canvasDom.height / 2;
+            minPoint.colCount = colCount;
+            minPoint.rowCount = rowCount;
+            console.log('minPoint:' + JSON.stringify(minPoint));
+            // console.log('distance' + distance)
+          }
+        }
+      })
+    })
+    seachBuildResult = false
+    // console.log('minPoint:' + JSON.stringify(minPoint.x + canvasDom.width / 2) + ',' + JSON.stringify(minPoint.y + canvasDom.height / 2));
+    return minPoint;
+  }
+  // -------------------长按导航end----------------------
+  
+  // 部分模态框需要顶起contain_left与contain_right
+  // let moveContainToTopControl = false;
+  function moveContainToTop(moveCount, showContainToTop) {
+    const contain_left = document.getElementsByClassName('contain_left');
+    const contain_right = document.getElementsByClassName('contain_right');
+
+    if (showContainToTop && moveCount > 0) {
+      contain_left[0].style.bottom = `${moveCount}rem`;
+      contain_right[0].style.bottom = `${moveCount}rem`;
+    } else {
+      contain_left[0].style.bottom = `0rem`;
+      contain_right[0].style.bottom = `0rem`;
+    }
+  }
+
+  // ---------------模态框DOM初始化 start-------------------
+  
+
+
+  const  seachKeshiDom = document.getElementById('seach_keshi');
+  const quickPositionDom = document.getElementById('quickPosition');
+  const planWayModalDom = document.getElementById('planWayModal')
+
+  // 加载快捷导航dom
+  const quickPosition = new QuickPosition(quickPositionDom)
+  quickPosition.initQuickPostion();
+  // 加载到这里去模态框dom
+  const comeHereModal = new ComeHereModal(comeHereModalDom);
+  // 加载导航信息模态框dom
+  const planWayModal = new PlanWayModal(planWayModalDom);
+
+  // ---------------模态框DOM初始化 end-------------------
+
+  // ---------------科室快捷导航位置选择 start-------------------
+  let keshiShow = false;
+
+  const quickPositionHide = document.getElementById('quickPositionHide');
+
+  quickPositionHide.addEventListener('click', function(event) {
+    quickPosition.quickPositionDomHide();
+  })
+
+  seachKeshiDom.addEventListener('click', function(event) {
+    if (keshiShow) {
+      quickPosition.quickPositionDomHide();
+    } else {
+      quickPosition.quickPositionDomShow();
+    }
+    event.stopPropagation();
+  })
+  // ---------------科室快捷导航位置选择 end-------------------
+  
+  // ---------------到这里去模态框 start-------------------
+  const comeHereIconDom = document.getElementById('comeHere-icon');
+  comeHereIconDom.addEventListener('click', (e) => {
+    stepPoint = 2;
+    comeHereModal.comeHereModalDomHide()
+    const planWayStartPoint = Object.assign({}, startPointPosition, {floor: floor[curFloor]});
+    const planWayEndPoint = Object.assign({}, endPointPosition, {floor: floor[curFloor]});
+    planWayModal.setPlanWayModal(planWayStartPoint, planWayEndPoint);
+  })  
+  // ---------------到这里去模态框 end-------------------
+
+
+  // 用来监听点击地图时使模态框消失
+  canvasDom.addEventListener("touchstart", function(){
+    console.log('隐藏模态框');
+    keshiShow ? quickPosition.quickPositionDomHide() : '';
+
+    // comeHereShow ? comeHereModal.comeHereModalDomHide() : '';
+  }, {passive: false});
+</script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+<!--pages/home/home.wxml-->
+<text>pages/home/home.wxml</text>
+<web-view src="https://wx.ncich.com.cn/H5Code/map.html"></web-view>

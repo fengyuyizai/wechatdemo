@@ -1,0 +1,62 @@
+quickPositionData = {
+  "data" : [
+    {
+      "id": "1",
+      "title": "会议室",
+      "describe": "xxxxx",
+      "list": [
+        {
+          "position": [0, 100],
+          "name": "会议室1"
+        }, {
+          "position": [0, 100],
+          "name": "会议室1"
+        }, {
+          "position": [0, 100],
+          "name": "会议室1"
+        }, {
+          "position": [0, 100],
+          "name": "会议室1"
+        }
+      ]
+    },{
+      "id": "1",
+      "title": "会议室2",
+      "describe": "xxxxx",
+      "list": [
+        {
+          "position": [0, 100],
+          "name": "会议室1"
+        }, {
+          "position": [0, 100],
+          "name": "会议室1"
+        }, {
+          "position": [0, 100],
+          "name": "会议室1"
+        }, {
+          "position": [0, 100],
+          "name": "会议室1"
+        }
+      ]
+    },{
+      "id": "1",
+      "title": "会议室3",
+      "describe": "xxxxx",
+      "list": [
+        {
+          "position": [0, 100],
+          "name": "会议室1"
+        }, {
+          "position": [0, 100],
+          "name": "会议室1"
+        }, {
+          "position": [0, 100],
+          "name": "会议室1"
+        }, {
+          "position": [0, 100],
+          "name": "会议室1"
+        }
+      ]
+    }
+  ]
+}

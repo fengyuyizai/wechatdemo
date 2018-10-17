@@ -1,0 +1,143 @@
+<!--index.wxml-->
+<view>
+  <view class='mapCanvas'>
+    <canvas 
+      canvas-id='mapCanvas'  
+      style='width:{{mapCavasW}}px; height:{{mapCavasH}}px'
+      bindtouchmove="touchmove"
+      bindtouchstart='touchstart'
+      bindtap='touchtap'
+      bindtouchend='touchend'></canvas>
+  </view>
+  <view class='mapControls'>
+    <view class='header'>
+      <image src="../../state/images/seach.png" mode="scaleToFill" class='seach_icon'></image>
+      <input class='header_seach' placeholder="搜索地名"></input>
+      <image src="../../state/images/song.png" mode="scaleToFill" class='song_icon'></image>
+      <view class='header_submit' bindtap='showQuickPosition'>科室</view>
+    </view>
+    <view class='guide'>
+      <cover-image src='../../state/images/compass.png' mode='scaleToFill' class='compass_icon' animation="{{compassData}}" bindtap="resetDirection"></cover-image>
+      <cover-view class='guide_back' wx:if="{{showPlanWayModel}}">
+        <cover-image class='guide_icon' src='../../state/images/back.png' catchtap='backStep'></cover-image>
+      </cover-view>
+    </view>
+    <view class='leftControls'  animation="{{comeHereModelAnimation}}">
+      <cover-view class='chooseFloor' wx:if="{{chooseFloorShow}}" bindtouchstart='flootTouchStart' bindtouchmove='flootTouchMove'>
+        <cover-view animation="{{floorAnimationData}}" class='inner-container'>
+          <cover-view 
+          wx:for="{{floorList}}" 
+          wx:key="{{index}}" 
+          data-num="{{index}}" 
+          class='floorItem {{curFloor == item?"curfloor": ""}}' 
+          bindtap='confirmFloor'>
+            <cover-view>{{item}}</cover-view>
+          </cover-view>
+        </cover-view>
+      </cover-view>
+      <cover-view class='curFloor' bindtap='chooseFloor'>
+        {{curFloor}}
+      </cover-view>
+      <cover-image src='../../state/images/location.png' mode='scaleToFill' class='location'></cover-image>
+    </view>
+    <view class='rightControls'  animation="{{comeHereModelAnimation}}">
+      <cover-view class='shijing'>
+        <cover-view>实景</cover-view>
+      </cover-view>
+      <cover-view class='add button' catchtap='addScale'>+</cover-view>
+      <cover-view class='minu button' catchtap='minuScale'>-</cover-view>
+    </view>
+    <cover-view class="comeHereModal" wx:if="{{showComeHereModel}}" animation="{{comeHereModelAnimation}}">
+       
+        <cover-view class="comeHereModal_contain">
+          <cover-view class="body">
+            <cover-view class="position">{{endPointPosition.areaName}}</cover-view>
+            <cover-view class="floor">{{curFloor}}</cover-view>
+            
+            <cover-view class='hr'></cover-view>
+            <cover-view class="shareFriend">
+              <cover-image class='share-icon' src='../../state/images/send.png'></cover-image>
+              <cover-view class='text'>发送位置给好友</cover-view>
+            </cover-view>
+          </cover-view>
+        </cover-view>
+         <cover-image 
+            class="comeHere-icon" 
+            src="../../state/images/comeHere.png"
+            bindtap='toPlanWay'></cover-image>
+      </cover-view>
+
+          <!-- 路线规划信息模态框 -->
+    <cover-view class="planWayModal" wx:if="{{showPlanWayModel}}" animation="{{planWayModelAnimation}}">
+      <cover-view class="planWayModal_contain">
+        <cover-view class="title">路线规划信息</cover-view>
+        <cover-view class="selectPoint startPoint">
+          <cover-image class='start icon' src='../../state/images/start.png'></cover-image>
+          <cover-view
+          bindtap='selectStartPoint'>
+          {{curFloor}} {{startPointPosition.areaName ? startPointPosition.areaName : '选择起点'}}</cover-view>
+        </cover-view>
+        <cover-view class="selectPoint endPoint">
+          <cover-image class='end icon' src='../../state/images/end.png'></cover-image>        
+          <cover-view
+          bindtap='backToComeHere'>
+          {{curFloor}} {{endPointPosition.areaName ? endPointPosition.areaName : '选择终点'}}</cover-view>
+        </cover-view>
+        <cover-view class="navigationBtn">
+          <cover-view class='content'>
+            <cover-view class="simulation">模拟导航</cover-view>
+            <cover-view class="real">开始导航</cover-view>
+          </cover-view>
+        </cover-view>
+      </cover-view>
+    </cover-view>
+
+
+      <!--快速选择地址模态框 -->
+    <cover-view class="quickPosition" wx:if="{{showQuickPositionModel}}">
+    <cover-view class="bgmTransparent" catchtap='showQuickPosition' data-hide="true"></cover-view>
+        <cover-view class='wrpper' animation="{{showQuickPositionAnimation}}">
+          <cover-view 
+            class='content' 
+            id='quickContent' 
+            style='transform:translateY({{quickContentMoveY}}px)'
+            bindtouchstart='quickTouchStart'
+            bindtouchmove='quickTouchMove'
+            bindtouchend='quickTouchEnd'>
+            <cover-view 
+              class='quickPosition_item' 
+              wx:for="{{quickPositionList}}"
+              wx:for-item="oneLevel"
+              wx:for-index="oneLevelIndex"
+              wx:key="{{oneLevelIndex}}">
+              <cover-view class='quickPosition_header'>
+                <cover-image class='icon' src='../../state/images/computed-icon.png'></cover-image>
+                <cover-view class="title">
+                  {{oneLevel.categoryName}}
+                  <cover-view class="describe">描述</cover-view>
+                </cover-view>
+                <cover-image class="down" src="../../state/images/down.png"></cover-image>
+              </cover-view>
+              <cover-view 
+                class="body"
+                wx:if="{{}}">
+                <cover-view 
+                  class='body_item' 
+                  wx:for="{{oneLevel.areas}}"
+                  wx:for-item="twoLevel"
+                  wx:for-index="twoLevelIndex"
+                  wx:key="{{twoLevelIndex}}"
+                  style='background-color:{{twoLevelIndex % 3 == 0? quickPositionTextbgm[0] : quickPositionTextbgm[1]}}'
+                  catchtap='selectPosition'
+                  data-position='{{twoLevel}}'>
+                  {{twoLevel.areaName}}
+                </cover-view>
+              </cover-view>
+            </cover-view>
+          </cover-view>
+        </cover-view>
+      
+    </cover-view>
+  </view>
+</view>
+
